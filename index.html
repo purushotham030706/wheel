@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spin the Wheel - Spicy Dares</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: #fff;
+      text-align: center;
+      padding-top: 40px;
+      margin: 0;
+    }
+    canvas {
+      margin: 0 auto;
+      display: block;
+      background: #fff;
+      border-radius: 50%;
+    }
+    #spin {
+      margin-top: 25px;
+      padding: 15px 40px;
+      font-size: 22px;
+      color: #fff;
+      background: #e91e63;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background .3s;
+    }
+    #spin:hover {
+      background: #ad1457;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 1.3em;
+      color: #FFD700;
+      min-height: 30px;
+    }
+    .arrow {
+      width: 0; 
+      height: 0; 
+      border-left: 25px solid transparent;
+      border-right: 25px solid transparent;
+      border-bottom: 50px solid #FFD700;
+      position: relative;
+      top: -230px;
+      left: calc(50% - 25px);
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spin the Wheel - Spicy Dares</h1>
+  <div class="arrow"></div>
+  <canvas id="wheel" width="450" height="450"></canvas>
+  <br />
+  <button id="spin">SPIN</button>
+  <div id="result"></div>
+  <script>
+    const options = [
+      "Kiss for 10 seconds",
+      "Whisper a fantasy",
+      "Switch clothes for 1 min",
+      "Dance seductively",
+      "Truth or Dare (her choice)",
+      "Remove an item",
+      "Give a massage",
+      "Share a naughty secret",
+    ];
+    const colors = ["#e57373","#ba68c8","#64b5f6","#81c784","#ffd54f","#ffb74d","#a1887f","#f06292"];
+    const wheel = document.getElementById("wheel");
+    const ctx = wheel.getContext("2d");
+
+    function drawWheel() {
+      const num = options.length;
+      const angle = 2 * Math.PI / num;
+      for (let i = 0; i < num; i++) {
+        ctx.beginPath();
+        ctx.moveTo(225,225);
+        ctx.arc(225,225,220,angle*i,angle*(i+1));
+        ctx.closePath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(225, 225);
+        ctx.rotate(angle * (i + 0.5));
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#222";
+        ctx.font = "18px Arial";
+        ctx.fillText(options[i], 200, 10);
+        ctx.restore();
+      }
+    }
+    drawWheel();
+
+    let spinning = false;
+    let rot = 0;
+    let currentAnimation = null;
+
+    document.getElementById("spin").onclick = function () {
+      if (spinning) return;
+      spinning = true;
+      document.getElementById("result").textContent = "";
+      let spins = Math.floor(Math.random() * 6) + 5; // random full spins
+      let degrees = Math.random() * 360;
+      let finalDeg = (spins * 360 + degrees) % 360;
+      let duration = 3000 + Math.random()*1000; // 3-4s
+      let start = null;
+
+      function animateWheel(timestamp) {
+        if (!start) start = timestamp;
+        let elapsed = timestamp - start;
+        let progress = Math.min(elapsed / duration, 1);
+        let ease = 1 - Math.pow(1 - progress, 3);
+        let rotate = rot + ease * (spins * 360 + degrees);
+        ctx.clearRect(0,0,450,450);
+        ctx.save();
+        ctx.translate(225,225);
+        ctx.rotate(rotate * Math.PI/180);
+        ctx.translate(-225,-225);
+        drawWheel();
+        ctx.restore();
+        if (progress < 1) {
+          currentAnimation = requestAnimationFrame(animateWheel);
+        } else {
+          spinning = false;
+          rot = (rot + spins * 360 + degrees) % 360;
+          let segment = options.length - Math.floor((rot + 22.5) % 360 / (360/options.length)) - 1;
+          if (segment < 0) segment += options.length;
+          document.getElementById("result").textContent = options[segment];
+        }
+      }
+      if (currentAnimation) cancelAnimationFrame(currentAnimation);
+      requestAnimationFrame(animateWheel);
+    }
+  </script>
+</body>
+</html>
